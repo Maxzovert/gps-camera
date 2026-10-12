@@ -13,6 +13,7 @@ import { StampSettings as StampSettingsSheet } from "@/components/stamp/StampSet
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
 import { useCamera } from "@/hooks/useCamera";
+import { useGeolocation } from "@/hooks/useGeolocation";
 import { useInstallPrompt, useNow, useOnlineStatus } from "@/hooks/useDevice";
 import { useMapThumbnail } from "@/hooks/useMapThumbnail";
 import { usePreferences } from "@/hooks/usePreferences";
@@ -20,6 +21,7 @@ import { LOGO_SRC } from "@/lib/brand";
 import { grabPhotoSource } from "@/lib/capture";
 import { DEFAULT_PREFERENCES, TEMPLATE_ORDER } from "@/lib/defaults";
 import { clearLocalData, savePhoto } from "@/lib/db";
+import { reverseGeocode } from "@/lib/geocoding";
 import { combineLocal, extensionForMime, photoFilename } from "@/lib/format";
 import { computeFrame, paintFrame, renderStampedBlob, renderStampedImage } from "@/lib/image-stamp";
 import { downloadBlob, loadImageFile, shareOrDownload } from "@/lib/media";
@@ -30,6 +32,9 @@ import type { ManualLocationValues } from "@/lib/validation";
 
 export function CameraApp() {
   const camera = useCamera();
+  const geo = useGeolocation();
+  const requestGps = geo.request;
+  const subscribeGps = geo.subscribe;
   const online = useOnlineStatus();
   const install = useInstallPrompt();
   const { preferences, update, replace, ready } = usePreferences();
@@ -89,6 +94,35 @@ export function CameraApp() {
   const { status, release, start, facingRef } = camera;
 
   useEffect(() => {
+    subscribeGps((reading) => {
+      if (preferences.locationMode === "manual") return;
+      setChosenPlace({
+        latitude: reading.latitude,
+        longitude: reading.longitude,
+        accuracy: reading.accuracy,
+        source: "automatic",
+        address: null,
+      });
+      if (preferences.locationMode !== "automatic") update({ locationMode: "automatic" });
+      if (!preferences.geocodingEnabled) return;
+      void reverseGeocode(reading.latitude, reading.longitude)
+        .then((address) => {
+          if (!address) return;
+          setChosenPlace((current) => {
+            if (!current || current.source !== "automatic") return current;
+            if (current.latitude !== reading.latitude || current.longitude !== reading.longitude) return current;
+            return { ...current, address };
+          });
+        })
+        .catch(() => undefined);
+    });
+  }, [subscribeGps, preferences.locationMode, preferences.geocodingEnabled, update]);
+
+  useEffect(() => {
+    if (geo.error) toast.error(geo.error);
+  }, [geo.error]);
+
+  useEffect(() => {
     const covered = panel === "preview" || panel === "storage";
     if (covered) {
       if (status === "ready") {
@@ -130,6 +164,7 @@ export function CameraApp() {
   function openLocation() {
     setLocationKey((value) => value + 1);
     setPanel("location");
+    if ((place?.source ?? preferences.locationMode) !== "manual") requestGps();
   }
 
   function changeMode(next: CameraMode) {
@@ -496,6 +531,7 @@ export function CameraApp() {
           onEnableCamera={() => {
             wantedRef.current = true;
             void camera.start(camera.facingRef.current);
+            if (preferences.locationMode !== "manual") requestGps();
           }}
           onImport={pickGalleryPhoto}
         />
@@ -541,6 +577,10 @@ export function CameraApp() {
           setPanel(null);
           toast.success(next.source === "manual" ? "Manual location applied" : "GPS location applied");
         }}
+        geoStatus={geo.status}
+        geoError={geo.error}
+        geoReading={geo.reading}
+        onRequestGps={requestGps}
       />
       <DateTimeSettings
         open={panel === "datetime"}

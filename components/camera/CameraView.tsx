@@ -66,6 +66,7 @@ export const CameraView = forwardRef<
         playsInline
         muted
         autoPlay
+        controls={false}
       />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/45 to-transparent" />
       {grid ? (

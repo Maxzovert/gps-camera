@@ -48,7 +48,7 @@ export function useCamera() {
     async (nextFacing: FacingMode) => {
       if (!window.isSecureContext) {
         setStatus("unsupported");
-        setError("Camera access needs HTTPS or localhost.");
+        setError("On a phone, camera and GPS only work on https://. An http:// address on your Wi-Fi is blocked.");
         return;
       }
       if (!navigator.mediaDevices?.getUserMedia) {
@@ -64,14 +64,7 @@ export function useCamera() {
       stopTracks();
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            facingMode: { ideal: nextFacing },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-          },
-        });
+        const stream = await openCameraStream(nextFacing);
         if (requestId !== requestRef.current) {
           stream.getTracks().forEach((track) => track.stop());
           return;
@@ -85,7 +78,26 @@ export function useCamera() {
         setFacing(nextFacing);
         const video = videoRef.current;
         if (video) {
+          video.muted = true;
+          video.defaultMuted = true;
+          video.playsInline = true;
+          video.setAttribute("playsinline", "true");
+          video.setAttribute("webkit-playsinline", "true");
           video.srcObject = stream;
+          if (video.readyState < 1) {
+            await new Promise<void>((resolve) => {
+              const done = () => {
+                video.removeEventListener("loadedmetadata", done);
+                resolve();
+              };
+              video.addEventListener("loadedmetadata", done);
+              window.setTimeout(done, 1500);
+            });
+          }
+          if (requestId !== requestRef.current) {
+            stream.getTracks().forEach((item) => item.stop());
+            return;
+          }
           await video.play().catch(() => undefined);
         }
         if (requestId !== requestRef.current) {
@@ -137,4 +149,27 @@ export function useCamera() {
     release,
     toggleTorch,
   };
+}
+
+async function openCameraStream(facing: FacingMode): Promise<MediaStream> {
+  const attempts: MediaTrackConstraints[] = [
+    { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+    { facingMode: { ideal: facing } },
+    { facingMode: facing },
+  ];
+  let last: unknown;
+  for (const video of attempts) {
+    try {
+      return await navigator.mediaDevices.getUserMedia({ audio: false, video });
+    } catch (error) {
+      last = error;
+      const name = error instanceof DOMException ? error.name : "";
+      if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") throw error;
+    }
+  }
+  try {
+    return await navigator.mediaDevices.getUserMedia({ audio: false, video: true });
+  } catch (error) {
+    throw last ?? error;
+  }
 }

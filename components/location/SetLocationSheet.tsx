@@ -4,7 +4,7 @@ import { useState } from "react";
 import { AutomaticLocation } from "@/components/location/AutomaticLocation";
 import { ManualLocationForm } from "@/components/location/ManualLocationForm";
 import { Sheet } from "@/components/ui/sheet";
-import { useGeolocation } from "@/hooks/useGeolocation";
+import type { GeoReading, GeoStatus } from "@/hooks/useGeolocation";
 import { cn } from "@/lib/utils";
 import type { ManualLocationValues } from "@/lib/validation";
 import type { LocationSource, Place } from "@/types";
@@ -20,6 +20,10 @@ export function SetLocationSheet({
   onGeocoding,
   online,
   onConfirm,
+  geoStatus,
+  geoError,
+  geoReading,
+  onRequestGps,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -31,9 +35,12 @@ export function SetLocationSheet({
   onGeocoding: (enabled: boolean) => void;
   online: boolean;
   onConfirm: (place: Place) => void;
+  geoStatus: GeoStatus;
+  geoError: string | null;
+  geoReading: GeoReading | null;
+  onRequestGps: () => void;
 }) {
   const [mode, setMode] = useState<LocationSource>(initialMode);
-  const geo = useGeolocation();
 
   return (
     <Sheet
@@ -47,7 +54,7 @@ export function SetLocationSheet({
           active={mode === "automatic"}
           onClick={() => {
             setMode("automatic");
-            if (geo.status === "idle") geo.request();
+            onRequestGps();
           }}
         >
           Use current location
@@ -61,10 +68,10 @@ export function SetLocationSheet({
       </p>
       {mode === "automatic" ? (
         <AutomaticLocation
-          reading={geo.reading}
-          status={geo.status}
-          error={geo.error}
-          request={geo.request}
+          reading={geoReading}
+          status={geoStatus}
+          error={geoError}
+          request={onRequestGps}
           geocodingEnabled={geocodingEnabled}
           onGeocoding={onGeocoding}
           online={online}
@@ -77,7 +84,7 @@ export function SetLocationSheet({
           postcode={postcode}
           onUseAutomatic={() => {
             setMode("automatic");
-            if (geo.status === "idle") geo.request();
+            onRequestGps();
           }}
           onApply={onConfirm}
         />

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 
 export interface GeoReading {
   latitude: number;
@@ -14,11 +14,16 @@ export function useGeolocation() {
   const [status, setStatus] = useState<GeoStatus>("idle");
   const [error, setError] = useState<string | null>(null);
   const [reading, setReading] = useState<GeoReading | null>(null);
+  const onReadingRef = useRef<((reading: GeoReading) => void) | null>(null);
+
+  const subscribe = useCallback((listener: (reading: GeoReading) => void) => {
+    onReadingRef.current = listener;
+  }, []);
 
   const request = useCallback(() => {
     if (!window.isSecureContext) {
       setStatus("unavailable");
-      setError("Location needs HTTPS or localhost. An approximate network location is not used.");
+      setError("On a phone, GPS only works on https://. An http:// Wi-Fi address is blocked, and a network guess is not used.");
       return;
     }
     if (!("geolocation" in navigator)) {
@@ -30,12 +35,14 @@ export function useGeolocation() {
     setError(null);
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setReading({
+        const next = {
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
           accuracy: Number.isFinite(position.coords.accuracy) ? position.coords.accuracy : null,
-        });
+        };
+        setReading(next);
         setStatus("ready");
+        onReadingRef.current?.(next);
       },
       (geoError) => {
         if (geoError.code === geoError.PERMISSION_DENIED) {
@@ -51,9 +58,9 @@ export function useGeolocation() {
         setStatus("unavailable");
         setError("GPS is unavailable right now. You can set the location manually.");
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
+      { enableHighAccuracy: true, timeout: 25000, maximumAge: 15000 },
     );
   }, []);
 
-  return { status, error, reading, request };
+  return { status, error, reading, request, subscribe };
 }
