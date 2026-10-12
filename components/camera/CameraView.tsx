@@ -29,6 +29,7 @@ export const CameraView = forwardRef<
     onExposure: (value: number) => void;
     onSwitchCamera: () => void;
     onEnableCamera: () => void;
+    onOpenPhoneCamera: () => void;
     onImport: () => void;
   }
 >(function CameraView(
@@ -50,6 +51,7 @@ export const CameraView = forwardRef<
     onExposure,
     onSwitchCamera,
     onEnableCamera,
+    onOpenPhoneCamera,
     onImport,
   },
   ref,
@@ -97,6 +99,15 @@ export const CameraView = forwardRef<
                 >
                   {status === "idle" ? "Enable camera" : "Try again"}
                 </button>
+                {status === "denied" ? (
+                  <button
+                    type="button"
+                    onClick={onOpenPhoneCamera}
+                    className="h-12 rounded-full bg-white px-6 text-sm font-semibold text-black"
+                  >
+                    Open phone camera
+                  </button>
+                ) : null}
                 <button
                   type="button"
                   onClick={onImport}

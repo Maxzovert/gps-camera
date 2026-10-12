@@ -37,6 +37,19 @@ export function usePermissionHost(): PermissionHost {
   return useSyncExternalStore(subscribe, permissionHost, () => "chrome");
 }
 
+export function openInChrome(): boolean {
+  if (typeof location === "undefined") return false;
+  const stripped = location.href.replace(/^https?:\/\//, "");
+  const href = `intent://${stripped}#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=${encodeURIComponent(location.href)};end`;
+  const link = document.createElement("a");
+  link.href = href;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  return true;
+}
+
 export function openAndroidPermissionSettings(): boolean {
   if (typeof navigator === "undefined" || !isAndroid()) return false;
   const href = isInstalledApp()

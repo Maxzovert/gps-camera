@@ -1,7 +1,6 @@
 "use client";
 
 import { Camera, MapPin, Settings } from "lucide-react";
-import { APP_NAME } from "@/lib/brand";
 import { usePermissionHost } from "@/lib/permission-host";
 
 export function PermissionPopup({
@@ -14,6 +13,8 @@ export function PermissionPopup({
   locationError,
   onAllowCamera,
   onAllowLocation,
+  onOpenPhoneCamera,
+  onOpenInChrome,
   onOpenSettings,
   onClose,
 }: {
@@ -26,6 +27,8 @@ export function PermissionPopup({
   locationError: string | null;
   onAllowCamera: () => void;
   onAllowLocation: () => void;
+  onOpenPhoneCamera: () => void;
+  onOpenInChrome: () => void;
   onOpenSettings: () => void;
   onClose: () => void;
 }) {
@@ -45,9 +48,11 @@ export function PermissionPopup({
           {android ? "Allow Android camera and location" : "Allow Chrome camera and location"}
         </h2>
         <p className="mt-2 text-sm leading-5 text-white/70">
-          {android
-            ? "Android will show its own permission popup for the camera, then for location."
-            : "Chrome will show its own permission popup for the camera, then for location."}
+          {android && cameraDenied
+            ? "The App permissions page stays empty because Chrome blocked the camera before Android could ask. Open the site in Chrome, tap the lock icon, and set Camera to Allow. Or take the photo with the phone camera."
+            : android
+              ? "Android will show its own permission popup for the camera, then for location."
+              : "Chrome will show its own permission popup for the camera, then for location."}
         </p>
         <div className="mt-4 space-y-3">
           <button
@@ -60,12 +65,14 @@ export function PermissionPopup({
             {cameraBusy ? "Waiting for the camera popup…" : cameraDenied ? "Try camera again" : android ? "Allow Android camera" : "Allow Chrome camera"}
           </button>
           {android && cameraDenied ? (
-            <ol className="list-decimal space-y-1 pl-4 text-xs leading-4 text-white/80">
-              <li>Tap Open Android settings.</li>
-              <li>Open {APP_NAME}.</li>
-              <li>Permissions, then Camera, then Allow.</li>
-              <li>Come back and tap Try camera again.</li>
-            </ol>
+            <button
+              type="button"
+              onClick={onOpenPhoneCamera}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-white text-sm font-semibold text-black"
+            >
+              <Camera className="size-4" />
+              Open phone camera
+            </button>
           ) : cameraError ? (
             <p className="text-xs leading-4 text-red-300">{cameraError}</p>
           ) : null}
@@ -79,7 +86,16 @@ export function PermissionPopup({
             {locationBusy ? "Waiting for the location popup…" : android ? "Allow Android location" : "Allow Chrome location"}
           </button>
           {locationError ? <p className="text-xs leading-4 text-red-300">{locationError}</p> : null}
-          {android && (cameraDenied || locationDenied) ? (
+          {android && cameraDenied ? (
+            <button
+              type="button"
+              onClick={onOpenInChrome}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/20 text-sm font-semibold"
+            >
+              Open in Chrome and allow camera
+            </button>
+          ) : null}
+          {android && locationDenied && !cameraDenied ? (
             <button
               type="button"
               onClick={onOpenSettings}

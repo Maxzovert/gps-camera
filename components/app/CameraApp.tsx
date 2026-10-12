@@ -19,7 +19,7 @@ import { useInstallPrompt, useNow, useOnlineStatus } from "@/hooks/useDevice";
 import { useMapThumbnail } from "@/hooks/useMapThumbnail";
 import { usePreferences } from "@/hooks/usePreferences";
 import { LOGO_SRC } from "@/lib/brand";
-import { openAndroidPermissionSettings } from "@/lib/permission-host";
+import { openAndroidPermissionSettings, openInChrome } from "@/lib/permission-host";
 import { grabPhotoSource } from "@/lib/capture";
 import { DEFAULT_PREFERENCES, TEMPLATE_ORDER } from "@/lib/defaults";
 import { clearLocalData, savePhoto } from "@/lib/db";
@@ -65,6 +65,7 @@ export function CameraApp() {
   const [elapsed, setElapsed] = useState(0);
   const viewRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const phoneCameraRef = useRef<HTMLInputElement>(null);
   const wantedRef = useRef(false);
   const retryAfterSettings = useRef(false);
   const cancelTimer = useRef(false);
@@ -415,6 +416,11 @@ export function CameraApp() {
     fileRef.current?.click();
   }
 
+  function openPhoneCamera() {
+    setPermissionSkipped(true);
+    phoneCameraRef.current?.click();
+  }
+
   async function stampGalleryFile(file: File) {
     if (file.type && !file.type.startsWith("image/")) {
       toast.error("Choose a photo.");
@@ -546,6 +552,7 @@ export function CameraApp() {
             void camera.start(camera.facing === "environment" ? "user" : "environment");
           }}
           onEnableCamera={() => setPermissionSkipped(false)}
+          onOpenPhoneCamera={openPhoneCamera}
           onImport={pickGalleryPhoto}
         />
         {mode === "reports" ? (
@@ -694,6 +701,18 @@ export function CameraApp() {
           if (file) void stampGalleryFile(file);
         }}
       />
+      <input
+        ref={phoneCameraRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="pointer-events-none absolute size-px opacity-0"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          event.target.value = "";
+          if (file) void stampGalleryFile(file);
+        }}
+      />
       <PhotoPreview
         open={panel === "preview"}
         item={capture}
@@ -712,7 +731,7 @@ export function CameraApp() {
         }}
       />
       <PermissionPopup
-        open={!permissionSkipped && camera.status !== "ready"}
+        open={!permissionSkipped && camera.status !== "ready" && panel !== "preview"}
         cameraBusy={camera.status === "requesting"}
         locationBusy={geo.status === "loading"}
         cameraDenied={camera.status === "denied"}
@@ -724,6 +743,10 @@ export function CameraApp() {
           void camera.start(camera.facingRef.current);
         }}
         onAllowLocation={() => requestGps()}
+        onOpenPhoneCamera={openPhoneCamera}
+        onOpenInChrome={() => {
+          openInChrome();
+        }}
         onOpenSettings={() => {
           retryAfterSettings.current = true;
           openAndroidPermissionSettings();
