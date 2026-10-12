@@ -188,8 +188,8 @@ function drawStamp(
   const shortSide = Math.min(width, height);
   const titleSize = clamp(Math.round(shortSide * 0.034 * settings.fontScale), 16, 72);
   const bodySize = clamp(Math.round(shortSide * 0.026 * settings.fontScale), 13, 52);
-  const mapW = model.showMap ? clamp(Math.round(shortSide * 0.24), 88, 360) : 0;
-  const mapH = model.showMap ? Math.round(mapW * 0.78) : 0;
+  const mapW = model.showMap ? clamp(Math.round(shortSide * 0.28), 96, 420) : 0;
+  const mapH = model.showMap ? Math.round(mapW * 0.74) : 0;
   const gap = Math.round(Math.max(8, mapW * 0.1));
   const textW = Math.max(120, Math.min(width - margin * 2 - mapW - (mapW ? gap : 0), Math.round(shortSide * 0.62)));
   const font = input.fontFamily || "sans-serif";
@@ -216,10 +216,10 @@ function drawStamp(
   const lineGap = Math.round(bodySize * 0.18);
   const textH = lines.reduce((sum, line) => sum + line.size + lineGap, 0);
   const contentH = Math.max(mapH, textH);
-  const markSize = model.watermark ? Math.round(bodySize * 1.05) : 0;
-  const markFontSize = Math.max(11, Math.round(markSize * 0.72));
-  const markGap = markSize ? Math.round(bodySize * 0.28) : 0;
-  const iconGap = Math.round(markSize * 0.28);
+  const markSize = model.watermark ? Math.round(titleSize * 0.6) : 0;
+  const markFontSize = Math.max(10, Math.round(titleSize * 0.4));
+  const markGap = markSize ? Math.round(titleSize * 0.22) : 0;
+  const iconGap = Math.round(markSize * 0.25);
   ctx.font = `500 ${markFontSize}px ${font}`;
   const labelW = model.watermark ? ctx.measureText(model.watermark).width : 0;
   const hasLogo = Boolean(input.logo && input.logo.complete && input.logo.naturalWidth > 0);
