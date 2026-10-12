@@ -1,11 +1,14 @@
 "use client";
 
-import { Camera, MapPin } from "lucide-react";
+import { Camera, MapPin, Settings } from "lucide-react";
+import { openAndroidPermissionSettings, usePermissionHost } from "@/lib/permission-host";
 
 export function PermissionPopup({
   open,
   cameraBusy,
   locationBusy,
+  cameraDenied,
+  locationDenied,
   cameraError,
   locationError,
   onAllowCamera,
@@ -15,13 +18,17 @@ export function PermissionPopup({
   open: boolean;
   cameraBusy: boolean;
   locationBusy: boolean;
+  cameraDenied: boolean;
+  locationDenied: boolean;
   cameraError: string | null;
   locationError: string | null;
   onAllowCamera: () => void;
   onAllowLocation: () => void;
   onClose: () => void;
 }) {
+  const host = usePermissionHost();
   if (!open) return null;
+  const android = host === "android";
 
   return (
     <div className="fixed inset-0 z-[80] flex items-end justify-center bg-black/80 p-4 sm:items-center">
@@ -32,10 +39,12 @@ export function PermissionPopup({
         className="w-full max-w-sm rounded-3xl border border-white/10 bg-zinc-950 p-5 text-white shadow-2xl"
       >
         <h2 id="permission-title" className="text-lg font-semibold">
-          Allow camera and location
+          {android ? "Allow Android camera and location" : "Allow Chrome camera and location"}
         </h2>
         <p className="mt-2 text-sm leading-5 text-white/70">
-          Your phone will show a permission popup for each. The same popups appear in the browser and in the installed app.
+          {android
+            ? "Android will show its own permission popup for the camera, then for location."
+            : "Chrome will show its own permission popup for the camera, then for location."}
         </p>
         <div className="mt-4 space-y-3">
           <button
@@ -45,7 +54,7 @@ export function PermissionPopup({
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-black disabled:opacity-60"
           >
             <Camera className="size-4" />
-            {cameraBusy ? "Waiting for the camera popup…" : "Allow camera"}
+            {cameraBusy ? "Waiting for the camera popup…" : android ? "Allow Android camera" : "Allow Chrome camera"}
           </button>
           {cameraError ? <p className="text-xs leading-4 text-red-300">{cameraError}</p> : null}
           <button
@@ -55,13 +64,20 @@ export function PermissionPopup({
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/20 text-sm font-semibold disabled:opacity-60"
           >
             <MapPin className="size-4" />
-            {locationBusy ? "Waiting for the location popup…" : "Allow location"}
+            {locationBusy ? "Waiting for the location popup…" : android ? "Allow Android location" : "Allow Chrome location"}
           </button>
           {locationError ? <p className="text-xs leading-4 text-red-300">{locationError}</p> : null}
+          {android && (cameraDenied || locationDenied) ? (
+            <button
+              type="button"
+              onClick={() => openAndroidPermissionSettings()}
+              className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/20 text-sm font-semibold"
+            >
+              <Settings className="size-4" />
+              Open Android settings
+            </button>
+          ) : null}
         </div>
-        <p className="mt-3 text-xs leading-4 text-white/50">
-          If no popup appears, tap the lock icon in the address bar and set Camera and Location to Allow.
-        </p>
         <button type="button" onClick={onClose} className="mt-3 h-11 w-full text-sm text-white/70">
           Not now
         </button>

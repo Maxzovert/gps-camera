@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useRef, useState } from "react";
+import { permissionHost } from "@/lib/permission-host";
 
 export interface GeoReading {
   latitude: number;
@@ -47,7 +48,11 @@ export function useGeolocation() {
       (geoError) => {
         if (geoError.code === geoError.PERMISSION_DENIED) {
           setStatus("denied");
-          setError("Location permission was denied. You can set the location manually.");
+          setError(
+            permissionHost() === "android"
+              ? "Android blocked location. Open this app's permissions and allow Location."
+              : "Chrome blocked location. Tap the lock icon, then set Location to Allow.",
+          );
           return;
         }
         if (geoError.code === geoError.TIMEOUT) {

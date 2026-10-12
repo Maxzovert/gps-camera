@@ -700,6 +700,8 @@ export function CameraApp() {
         open={!permissionSkipped && camera.status !== "ready"}
         cameraBusy={camera.status === "requesting"}
         locationBusy={geo.status === "loading"}
+        cameraDenied={camera.status === "denied"}
+        locationDenied={geo.status === "denied"}
         cameraError={camera.error}
         locationError={geo.error}
         onAllowCamera={() => {

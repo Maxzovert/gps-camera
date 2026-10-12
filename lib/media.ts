@@ -1,4 +1,5 @@
 import { APP_NAME } from "@/lib/brand";
+import { permissionHost } from "@/lib/permission-host";
 
 export async function loadImageFile(file: File): Promise<{
   source: CanvasImageSource;
@@ -92,7 +93,10 @@ export function cameraErrorMessage(error: unknown): { status: "denied" | "unsupp
   if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
     return {
       status: "denied",
-      message: "Camera is blocked. Tap the lock icon in the address bar, set Camera to Allow, then tap Try again.",
+      message:
+        permissionHost() === "android"
+          ? "Android blocked the camera. Open this app's permissions and allow Camera."
+          : "Chrome blocked the camera. Tap the lock icon, then set Camera to Allow.",
     };
   }
   if (name === "NotFoundError" || name === "DevicesNotFoundError" || name === "OverconstrainedError") {
