@@ -19,6 +19,7 @@ import { useInstallPrompt, useNow, useOnlineStatus } from "@/hooks/useDevice";
 import { useMapThumbnail } from "@/hooks/useMapThumbnail";
 import { usePreferences } from "@/hooks/usePreferences";
 import { LOGO_SRC } from "@/lib/brand";
+import { openAndroidPermissionSettings } from "@/lib/permission-host";
 import { grabPhotoSource } from "@/lib/capture";
 import { DEFAULT_PREFERENCES, TEMPLATE_ORDER } from "@/lib/defaults";
 import { clearLocalData, savePhoto } from "@/lib/db";
@@ -65,6 +66,7 @@ export function CameraApp() {
   const viewRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const wantedRef = useRef(false);
+  const retryAfterSettings = useRef(false);
   const cancelTimer = useRef(false);
   const recorderRef = useRef<RecordingHandle | null>(null);
   const logoRef = useRef<HTMLImageElement | null>(null);
@@ -123,6 +125,19 @@ export function CameraApp() {
   useEffect(() => {
     if (geo.error) toast.error(geo.error);
   }, [geo.error]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible" || !retryAfterSettings.current) return;
+      retryAfterSettings.current = false;
+      if (status === "denied" || status === "error") {
+        wantedRef.current = true;
+        void start(facingRef.current);
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [status, start, facingRef]);
 
   useEffect(() => {
     const covered = panel === "preview" || panel === "storage";
@@ -709,6 +724,10 @@ export function CameraApp() {
           void camera.start(camera.facingRef.current);
         }}
         onAllowLocation={() => requestGps()}
+        onOpenSettings={() => {
+          retryAfterSettings.current = true;
+          openAndroidPermissionSettings();
+        }}
         onClose={() => setPermissionSkipped(true)}
       />
       {processing ? (

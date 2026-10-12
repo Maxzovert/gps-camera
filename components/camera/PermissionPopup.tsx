@@ -1,7 +1,8 @@
 "use client";
 
 import { Camera, MapPin, Settings } from "lucide-react";
-import { openAndroidPermissionSettings, usePermissionHost } from "@/lib/permission-host";
+import { APP_NAME } from "@/lib/brand";
+import { usePermissionHost } from "@/lib/permission-host";
 
 export function PermissionPopup({
   open,
@@ -13,6 +14,7 @@ export function PermissionPopup({
   locationError,
   onAllowCamera,
   onAllowLocation,
+  onOpenSettings,
   onClose,
 }: {
   open: boolean;
@@ -24,6 +26,7 @@ export function PermissionPopup({
   locationError: string | null;
   onAllowCamera: () => void;
   onAllowLocation: () => void;
+  onOpenSettings: () => void;
   onClose: () => void;
 }) {
   const host = usePermissionHost();
@@ -54,9 +57,18 @@ export function PermissionPopup({
             className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-semibold text-black disabled:opacity-60"
           >
             <Camera className="size-4" />
-            {cameraBusy ? "Waiting for the camera popup…" : android ? "Allow Android camera" : "Allow Chrome camera"}
+            {cameraBusy ? "Waiting for the camera popup…" : cameraDenied ? "Try camera again" : android ? "Allow Android camera" : "Allow Chrome camera"}
           </button>
-          {cameraError ? <p className="text-xs leading-4 text-red-300">{cameraError}</p> : null}
+          {android && cameraDenied ? (
+            <ol className="list-decimal space-y-1 pl-4 text-xs leading-4 text-white/80">
+              <li>Tap Open Android settings.</li>
+              <li>Open {APP_NAME}.</li>
+              <li>Permissions, then Camera, then Allow.</li>
+              <li>Come back and tap Try camera again.</li>
+            </ol>
+          ) : cameraError ? (
+            <p className="text-xs leading-4 text-red-300">{cameraError}</p>
+          ) : null}
           <button
             type="button"
             onClick={onAllowLocation}
@@ -70,7 +82,7 @@ export function PermissionPopup({
           {android && (cameraDenied || locationDenied) ? (
             <button
               type="button"
-              onClick={() => openAndroidPermissionSettings()}
+              onClick={onOpenSettings}
               className="flex h-12 w-full items-center justify-center gap-2 rounded-full border border-white/20 text-sm font-semibold"
             >
               <Settings className="size-4" />

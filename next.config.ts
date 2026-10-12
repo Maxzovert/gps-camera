@@ -17,7 +17,6 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: [
           { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(self), geolocation=(self)" },
           { key: "X-Content-Type-Options", value: "nosniff" },
         ],
       },

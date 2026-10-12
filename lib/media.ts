@@ -95,7 +95,7 @@ export function cameraErrorMessage(error: unknown): { status: "denied" | "unsupp
       status: "denied",
       message:
         permissionHost() === "android"
-          ? "Android blocked the camera. Open this app's permissions and allow Camera."
+          ? "Android blocked the camera. Allow Camera for GPS Map Camera, then tap Try camera again."
           : "Chrome blocked the camera. Tap the lock icon, then set Camera to Allow.",
     };
   }
