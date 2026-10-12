@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { toast, Toaster } from "sonner";
 import { CameraControls } from "@/components/camera/CameraControls";
 import { CameraView } from "@/components/camera/CameraView";
+import { PermissionPopup } from "@/components/camera/PermissionPopup";
 import { SetLocationSheet } from "@/components/location/SetLocationSheet";
 import { PhotoPreview } from "@/components/photo/PhotoPreview";
 import { StorageGallery } from "@/components/photo/StorageGallery";
@@ -57,6 +58,7 @@ export function CameraApp() {
   const [savedId, setSavedId] = useState<string | null>(null);
   const [galleryVersion, setGalleryVersion] = useState(0);
   const [processing, setProcessing] = useState(false);
+  const [permissionSkipped, setPermissionSkipped] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
   const [recording, setRecording] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -528,12 +530,7 @@ export function CameraApp() {
             wantedRef.current = true;
             void camera.start(camera.facing === "environment" ? "user" : "environment");
           }}
-          onEnableCamera={() => {
-            wantedRef.current = true;
-            void camera.start(camera.facingRef.current).then((started) => {
-              if (started && preferences.locationMode !== "manual") requestGps();
-            });
-          }}
+          onEnableCamera={() => setPermissionSkipped(false)}
           onImport={pickGalleryPhoto}
         />
         {mode === "reports" ? (
@@ -698,6 +695,19 @@ export function CameraApp() {
             if (outcome === "downloaded") toast("Sharing isn't available here, so the file was downloaded.");
           });
         }}
+      />
+      <PermissionPopup
+        open={!permissionSkipped && camera.status !== "ready"}
+        cameraBusy={camera.status === "requesting"}
+        locationBusy={geo.status === "loading"}
+        cameraError={camera.error}
+        locationError={geo.error}
+        onAllowCamera={() => {
+          wantedRef.current = true;
+          void camera.start(camera.facingRef.current);
+        }}
+        onAllowLocation={() => requestGps()}
+        onClose={() => setPermissionSkipped(true)}
       />
       {processing ? (
         <div className="fixed inset-0 z-[70] grid place-items-center bg-black/70 text-sm font-semibold">
