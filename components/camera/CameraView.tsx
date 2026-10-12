@@ -78,7 +78,7 @@ export const CameraView = forwardRef<
         </div>
       ) : null}
       {status !== "ready" ? (
-        <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80 px-6 pb-24 text-center">
+        <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/80 px-6 pb-24 text-center">
           <div className="pointer-events-auto max-w-xs">
             <Image src={LOGO_SRC} alt="" width={96} height={96} className="mx-auto size-24 rounded-3xl object-cover shadow-lg" priority />
             <h1 className="mt-3 text-xl font-semibold">{APP_NAME}</h1>

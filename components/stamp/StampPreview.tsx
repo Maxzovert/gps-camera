@@ -43,19 +43,19 @@ export function StampPreview({
           settings.background === "black" && "rounded-xl bg-black/65 p-2",
           settings.background === "white" && "rounded-xl bg-white/92 p-2",
         )}
-        style={{ color, fontSize: "clamp(26px, 4.8vw, 40px)" }}
+        style={{ color }}
       >
         {model.watermark ? (
-          <div className="mb-[0.22em] flex h-[0.6em] items-center justify-end gap-[0.18em] text-white">
-            <Image src={LOGO_SRC} alt="" width={24} height={24} className="size-[0.6em] rounded-[0.12em] object-cover" />
-            <span className="text-[0.4em] leading-none font-medium [text-shadow:0_1px_1px_rgba(0,0,0,0.9)]">
+          <div className="mb-1 flex items-center justify-end gap-1 text-white">
+            <Image src={LOGO_SRC} alt="" width={14} height={14} className="size-3.5 rounded-[3px] object-cover" />
+            <span className="text-[10px] leading-none font-medium [text-shadow:0_1px_1px_rgba(0,0,0,0.9)]">
               {model.watermark || APP_NAME}
             </span>
           </div>
         ) : null}
-        <div className={cn("flex items-center gap-[0.35em]", right && "flex-row-reverse text-right")}>
+        <div className={cn("flex items-end gap-2", right && "flex-row-reverse text-right")}>
           {model.showMap ? (
-            <div className="relative h-[5.4em] w-[6.4em] shrink-0 overflow-hidden rounded-[0.2em] bg-zinc-800">
+            <div className="relative h-[72px] w-[92px] shrink-0 overflow-hidden rounded-md bg-zinc-800">
               {mapUrl ? (
                 <>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -71,15 +71,15 @@ export function StampPreview({
             style={{ textShadow: shadow ? "0 1px 2px rgba(0,0,0,0.95), 0 0 8px rgba(0,0,0,0.55)" : undefined }}
           >
             {model.title || model.flag ? (
-              <p className="text-[1em] leading-none font-bold">
+              <p className="text-[15px] leading-tight font-semibold">
                 {model.title} {model.flag}
               </p>
             ) : null}
-            {model.address ? <p className="mt-[0.18em] line-clamp-3 text-[0.62em] leading-[1.25]">{model.address}</p> : null}
-            {model.coordinates ? <p className="text-[0.62em] leading-[1.25]">{model.coordinates}</p> : null}
-            {model.dateTime ? <p className="text-[0.62em] leading-[1.25] tabular-nums">{model.dateTime}</p> : null}
-            {model.accuracy ? <p className="text-[0.62em] leading-[1.25]">{model.accuracy}</p> : null}
-            {model.note ? <p className="line-clamp-2 text-[0.62em] leading-[1.25]">{model.note}</p> : null}
+            {model.address ? <p className="mt-0.5 line-clamp-2 text-[11px] leading-snug">{model.address}</p> : null}
+            {model.coordinates ? <p className="text-[11px] leading-snug">{model.coordinates}</p> : null}
+            {model.dateTime ? <p className="text-[11px] leading-snug tabular-nums">{model.dateTime}</p> : null}
+            {model.accuracy ? <p className="text-[11px] leading-snug">{model.accuracy}</p> : null}
+            {model.note ? <p className="line-clamp-2 text-[11px] leading-snug">{model.note}</p> : null}
           </div>
         </div>
       </div>

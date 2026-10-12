@@ -530,8 +530,9 @@ export function CameraApp() {
           }}
           onEnableCamera={() => {
             wantedRef.current = true;
-            void camera.start(camera.facingRef.current);
-            if (preferences.locationMode !== "manual") requestGps();
+            void camera.start(camera.facingRef.current).then((started) => {
+              if (started && preferences.locationMode !== "manual") requestGps();
+            });
           }}
           onImport={pickGalleryPhoto}
         />

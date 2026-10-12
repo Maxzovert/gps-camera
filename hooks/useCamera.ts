@@ -49,12 +49,12 @@ export function useCamera() {
       if (!window.isSecureContext) {
         setStatus("unsupported");
         setError("On a phone, camera and GPS only work on https://. An http:// address on your Wi-Fi is blocked.");
-        return;
+        return false;
       }
       if (!navigator.mediaDevices?.getUserMedia) {
         setStatus("unsupported");
         setError("This browser doesn't support camera access.");
-        return;
+        return false;
       }
 
       const requestId = requestRef.current + 1;
@@ -67,7 +67,7 @@ export function useCamera() {
         const stream = await openCameraStream(nextFacing);
         if (requestId !== requestRef.current) {
           stream.getTracks().forEach((track) => track.stop());
-          return;
+          return false;
         }
         streamRef.current = stream;
         const track = stream.getVideoTracks()[0];
@@ -96,21 +96,23 @@ export function useCamera() {
           }
           if (requestId !== requestRef.current) {
             stream.getTracks().forEach((item) => item.stop());
-            return;
+            return false;
           }
           await video.play().catch(() => undefined);
         }
         if (requestId !== requestRef.current) {
           stream.getTracks().forEach((item) => item.stop());
-          return;
+          return false;
         }
         setStatus("ready");
+        return true;
       } catch (caught) {
-        if (requestId !== requestRef.current) return;
+        if (requestId !== requestRef.current) return false;
         stopTracks();
         const result = cameraErrorMessage(caught);
         setStatus(result.status);
         setError(result.message);
+        return false;
       }
     },
     [stopTracks],

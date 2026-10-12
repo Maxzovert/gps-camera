@@ -92,7 +92,7 @@ export function cameraErrorMessage(error: unknown): { status: "denied" | "unsupp
   if (name === "NotAllowedError" || name === "PermissionDeniedError" || name === "SecurityError") {
     return {
       status: "denied",
-      message: "Camera permission was denied. Allow camera access in the browser site settings, then try again.",
+      message: "Camera is blocked. Tap the lock icon in the address bar, set Camera to Allow, then tap Try again.",
     };
   }
   if (name === "NotFoundError" || name === "DevicesNotFoundError" || name === "OverconstrainedError") {
